@@ -16,11 +16,15 @@ InsuranceAI is an end-to-end AI system that:
 
 https://github.com/Sanjeevspuranik/InsuranceAI/blob/main/demo/video/InsuranceAI_demo.mp4
 
----
 
 ## 🏗️ System Architecture
 
 ![InsuranceAI System Design](demo/system_design.png)
+
+
+## 📄 Sample Generated Report
+
+[Download Sample Insurance Report](demo/document/damage_report.pdf)
 
 ---
 
