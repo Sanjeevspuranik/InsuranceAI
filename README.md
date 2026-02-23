@@ -12,9 +12,10 @@ InsuranceAI is an end-to-end AI system that:
 
 ---
 
-🎥 **Project Demo**
+## 🎥 Demo
 
-https://github.com/Sanjeevspuranik/InsuranceAI/demo/video/InsuranceAI_demo.mp4
+https://github.com/Sanjeevspuranik/InsuranceAI/blob/main/demo/video/InsuranceAI_demo.mp4
+
 
 ---
 ## 🔥 Features
