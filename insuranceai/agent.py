@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import List, Dict, Any, TypedDict, Annotated, Optional
 
 from langgraph.graph import StateGraph, END
-from langchain_core.messages import AnyMessage, SystemMessage, ToolMessage
+from langchain_core.messages import AIMessage, AnyMessage, SystemMessage, ToolMessage
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.tools import BaseTool
 
@@ -65,7 +65,7 @@ class InsuranceAgent:
 
         self.workflow = workflow.compile(checkpointer=checkpointer)
         self.tools = {t.name: t for t in tools}
-        self.model = model.bind_tools(tools)  # type:ignore
+        self.model = model.bind_tools(tools) if tools else model
 
     def process_request(self, state: AgentState) -> Dict[str, List[AnyMessage]]:
         """Process request with LLM."""
@@ -75,10 +75,18 @@ class InsuranceAgent:
         response = self.model.invoke(messages)
         return {"messages": [response]}
 
+    def invoke(self, messages: List[AnyMessage]) -> AIMessage:
+        """Run the graph and return its final assistant response."""
+        state = self.workflow.invoke({"messages": messages})
+        response = state["messages"][-1]
+        if not isinstance(response, AIMessage):
+            raise TypeError("The agent workflow did not return an assistant response.")
+        return response
+
     def has_tool_calls(self, state: AgentState) -> bool:
         """Check if LLM response contains tool calls."""
         response = state["messages"][-1]
-        return len(response.tool_calls) > 0  # type:ignore
+        return bool(getattr(response, "tool_calls", []))
 
     def execute_tools(self, state: AgentState) -> Dict[str, List[ToolMessage]]:
         """Execute tool calls from LLM response."""
@@ -88,9 +96,8 @@ class InsuranceAgent:
         for call in tool_calls:
             print(f"Executing tool: {call}")
             if call["name"] not in self.tools:
-                result = "invalid tool, please retry"
-            else:
-                result = self.tools[call["name"]].invoke(call["args"])
+                raise ValueError(f"Model requested an unavailable tool: {call['name']}")
+            result = self.tools[call["name"]].invoke(call["args"])
 
             results.append(
                 ToolMessage(
@@ -110,7 +117,7 @@ class InsuranceAgent:
         if not self.log_tools:
             return
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         filename = self.log_path / f"tool_calls_{timestamp}.json"
 
         logs: List[ToolCallLog] = []

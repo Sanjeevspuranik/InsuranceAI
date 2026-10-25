@@ -25,29 +25,29 @@ def predict_image_tool(img_path: str):
 
 @tool("generate_damage_report", return_direct=False)
 def generate_damage_report_tool(json_obj: dict = None, img_path: str = None):
-    """Generate a professional insurance damage report using GPT-4o-mini."""
+    """Generate a GPT-6-Luna damage report from detections and an optional image."""
     if json_obj is None and img_path:
-        # Run YOLO again if no JSON provided
         json_obj = predict_image(model=yolo_model, img_path=img_path)
     elif json_obj is None:
         raise ValueError("Either json_obj or img_path must be provided.")
-    return generate_damage_report(json_obj)
+    return generate_damage_report(json_obj, img_path=img_path)
 
 # Tool: PDF Generator
 
 
 @tool("create_damage_pdf", return_direct=False)
 def create_damage_pdf_tool(report_text: str, images_dir: str = "segmented_classes", output_path: str = "damage_report.pdf"):
-    """Create a PDF including the damage report and segmentation images."""
+    """Create a styled PDF from the report, including annotated evidence images."""
     return create_damage_pdf(report_text, images_dir, output_path)
 
 # Tool: Visualization
 
 
 @tool("visualize_segments", return_direct=False)
-def visualize_segments_tool(img_path: str):
+def visualize_segments_tool(img_path: str, output_path: str = "segmented_damage.jpg"):
     """Overlay segmentation masks and labels on the original image."""
-    return visualize_segments(img_path=img_path)
+    return visualize_segments(img_path=img_path, output_path=output_path)
+
 
 # Collect all tools in a list
 
