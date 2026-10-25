@@ -136,6 +136,9 @@ celerybeat.pid
 
 # Environments
 .env
+.env.*
+!.env.example
+!.env.*.example
 .envrc
 .venv
 env/
@@ -200,6 +203,33 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# Local application data and frontend build output
+data/
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+server.log*
+logs/
+segmented_outputs/
+runs/
+wandb/
+mlruns/
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.vercel/
+frontend/.turbo/
+frontend/coverage/
+coverage/
+
+# Local credentials and operating-system files
+*.key
+*.p12
+*.pfx
+.DS_Store
+Thumbs.db
 
 # Marimo
 marimo/_static/
