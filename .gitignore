@@ -77,6 +77,7 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+.ipynb
 
 # IPython
 profile_default/
@@ -225,9 +226,27 @@ frontend/coverage/
 coverage/
 
 # Local credentials and operating-system files
+*.env
 *.key
+*.pem
 *.p12
 *.pfx
+*.secret
+credentials.json
+credentials.*.json
+!credentials.example.json
+service-account*.json
+!service-account.example.json
+secret.env
+secrets.env
+secrets/
+.aws/
+.azure/
+.gcloud/
+id_rsa
+id_ed25519
+id_ecdsa
+id_dsa
 .DS_Store
 Thumbs.db
 
