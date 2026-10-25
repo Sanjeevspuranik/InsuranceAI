@@ -4,11 +4,11 @@
 
 InsuranceAI is an end-to-end AI system that:
 
-* Detects vehicle damage using YOLOv8 segmentation
-* Generates structured insurance damage reports using LLMs
-* Creates professional PDF reports
-* Visualizes damage masks with labeled overlays
-* Designed for integration with Agentic AI systems (LangGraph-ready)
+- Detects vehicle damage using YOLOv8 segmentation
+- Generates structured insurance damage reports using LLMs
+- Creates professional PDF reports
+- Visualizes damage masks with labeled overlays
+- Designed for integration with Agentic AI systems (LangGraph-ready)
 
 ---
 
@@ -16,11 +16,9 @@ InsuranceAI is an end-to-end AI system that:
 
 https://github.com/Sanjeevspuranik/InsuranceAI/blob/main/demo/video/InsuranceAI_demo.mp4
 
-
 ## 🏗️ System Architecture
 
 ![InsuranceAI System Design](demo/system_design.svg)
-
 
 ## 📄 Sample Generated Report
 
@@ -30,12 +28,12 @@ https://github.com/Sanjeevspuranik/InsuranceAI/blob/main/demo/video/InsuranceAI_
 
 ## 🔥 Features
 
-* ✅ YOLOv8 Segmentation-based Damage Detection
-* ✅ Bounding Box + Mask Predictions
-* ✅ GPT-based Insurance Damage Report Generation
-* ✅ Formatted PDF reports with section styling, page numbers, and annotated evidence
-* ✅ Class-wise Segmentation Visualization
-* ✅ Modular Architecture for SaaS / API Deployment
+- ✅ YOLOv8 Segmentation-based Damage Detection
+- ✅ Bounding Box + Mask Predictions
+- ✅ GPT-based Insurance Damage Report Generation
+- ✅ Formatted PDF reports with section styling, page numbers, and annotated evidence
+- ✅ Class-wise Segmentation Visualization
+- ✅ Modular Architecture for SaaS / API Deployment
 
 ---
 
@@ -60,11 +58,11 @@ https://github.com/Sanjeevspuranik/InsuranceAI/blob/main/demo/video/InsuranceAI_
 
 ### Framework
 
-* Ultralytics YOLOv8
-* Version: 8.4.14
-* Python: 3.12.3
-* Torch: 2.10.0 (CPU)
-* Hardware: AMD Ryzen 9 6900HS (CPU training/inference)
+- Ultralytics YOLOv8
+- Version: 8.4.14
+- Python: 3.12.3
+- Torch: 2.10.0 (CPU)
+- Hardware: AMD Ryzen 9 6900HS (CPU training/inference)
 
 ---
 
@@ -112,10 +110,10 @@ https://github.com/Sanjeevspuranik/InsuranceAI/blob/main/demo/video/InsuranceAI_
 
 ### Dataset
 
-* 374 validation images
-* 785 total instances
-* Balanced across 6 vehicle damage classes
-* YOLO format labels (segmentation masks)
+- 374 validation images
+- 785 total instances
+- Balanced across 6 vehicle damage classes
+- YOLO format labels (segmentation masks)
 
 ### Dataset Distribution
 
@@ -375,15 +373,15 @@ visualize_segments(results)
 
 # 🧠 LLM Integration
 
-* Uses GPT-6-Luna through `langchain-openai` (configurable with `OPENAI_MODEL`)
-* Sends the uploaded JPEG, PNG, or WEBP image as a base64 data URL in a multimodal
+- Uses GPT-6-Luna through `langchain-openai` (configurable with `OPENAI_MODEL`)
+- Sends the uploaded JPEG, PNG, or WEBP image as a base64 data URL in a multimodal
   `HumanMessage`, alongside YOLO detections
-* Produces a structured damage report and a best-effort, uncertainty-qualified
+- Produces a structured damage report and a best-effort, uncertainty-qualified
   visual estimate of the vehicle make and model
-* Displays provider-reported reasoning-token counts when available, without
+- Displays provider-reported reasoning-token counts when available, without
   exposing hidden chain-of-thought text
-* Does not generate monetary estimates; pricing research is not configured
-* Displays a concise assessment rationale from the final response, not hidden
+- Does not generate monetary estimates; pricing research is not configured
+- Displays a concise assessment rationale from the final response, not hidden
   chain-of-thought or raw reasoning tokens
 
 Set `OPENAI_API_KEY` in the environment or `.env` file before starting the app.
@@ -394,23 +392,28 @@ provider. Set `OPENAI_MODEL` to override the default `gpt-6-luna` model identifi
 
 # 🔮 Future Roadmap
 
-* [ ] Cost estimation engine per damage class
-* [ ] Human-in-the-loop claim approval
-* [x] LangGraph agentic workflow
-* [ ] Multi-image claim analysis
-* [x] Authenticated FastAPI API
-* [x] Next.js web application
-* [ ] Mobile upload integration
+- [ ] Approximate repair-cost ranges by detected damage, vehicle make/model,
+      region, and labor/parts pricing source
+- [ ] Estimated claimable amount based on covered repair costs, policy limits,
+      exclusions, deductible, and co-pay when policy data is provided
+- [ ] Show estimate assumptions, source and date, confidence range, and
+      human-review disclaimer; never present estimates as a guaranteed settlement
+- [ ] Human-in-the-loop claim approval
+- [ ] Multi-image claim analysis
+- [ ] Mobile upload integration
+- [x] LangGraph agentic workflow
+- [x] Authenticated FastAPI API
+- [x] Next.js web application
 
 ---
 
 # 🏆 Why InsuranceAI?
 
-* Accurate segmentation-based detection
-* High performance on critical classes (Glass, Tire, Lamp)
-* CPU-compatible
-* Modular production-ready architecture
-* Designed for real-world insurance automation
+- Accurate segmentation-based detection
+- High performance on critical classes (Glass, Tire, Lamp)
+- CPU-compatible
+- Modular production-ready architecture
+- Designed for real-world insurance automation
 
 ---
 
