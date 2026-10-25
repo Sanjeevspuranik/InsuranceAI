@@ -390,6 +390,12 @@ provider. Set `OPENAI_MODEL` to override the default `gpt-6-luna` model identifi
 
 ---
 
+# 🔮 Features
+- [x] LangGraph agentic workflow
+- [x] Authenticated FastAPI API
+- [x] Next.js web application
+---
+
 # 🔮 Future Roadmap
 
 - [ ] Approximate repair-cost ranges by detected damage, vehicle make/model,
@@ -401,9 +407,6 @@ provider. Set `OPENAI_MODEL` to override the default `gpt-6-luna` model identifi
 - [ ] Human-in-the-loop claim approval
 - [ ] Multi-image claim analysis
 - [ ] Mobile upload integration
-- [x] LangGraph agentic workflow
-- [x] Authenticated FastAPI API
-- [x] Next.js web application
 
 ---
 
