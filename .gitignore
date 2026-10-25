@@ -77,7 +77,7 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
-.ipynb
+*.ipynb
 
 # IPython
 profile_default/
@@ -223,6 +223,7 @@ frontend/out/
 frontend/.vercel/
 frontend/.turbo/
 frontend/coverage/
+*.tsbuildinfo
 coverage/
 
 # Local credentials and operating-system files
