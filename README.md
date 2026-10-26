@@ -415,12 +415,12 @@ Serper. Estimates are always **ranges**, never a single figure or a settlement.
 Configuration (optional; without a key, claims complete with the damage report
 and no estimate):
 
-| Variable | Purpose |
-|---|---|
-| `TAVILY_SEARCH_API` / `SERPER_SEARCH_API` | Search provider API keys |
-| `PRICE_SEARCH_PROVIDER` | `tavily` or `serper` (default: whichever key is set, Tavily first) |
-| `PRICE_SEARCH_MAX_CALLS` | Searches allowed per claim (default 16) |
-| `PRICE_SEARCH_CACHE_TTL_HOURS` | Price cache lifetime (default 24) |
+| Variable                                  | Purpose                                                            |
+| ----------------------------------------- | ------------------------------------------------------------------ |
+| `TAVILY_SEARCH_API` / `SERPER_SEARCH_API` | Search provider API keys                                           |
+| `PRICE_SEARCH_PROVIDER`                   | `tavily` or `serper` (default: whichever key is set, Tavily first) |
+| `PRICE_SEARCH_MAX_CALLS`                  | Searches allowed per claim (default 16)                            |
+| `PRICE_SEARCH_CACHE_TTL_HOURS`            | Price cache lifetime (default 24)                                  |
 
 Limitations: prices are parsed from web search snippets, so they are indicative
 and can be wrong or sparse; a line with too little data is shown as "price not
@@ -432,19 +432,24 @@ is processing, the UI shows the live pipeline step and percentage from the worke
 
 ---
 
-# 🔮 Future Roadmap
+# 🔮 Features
 
+- [x] LangGraph agentic workflow
+- [x] Authenticated FastAPI API
+- [x] Next.js web application
+- [x] Mobile upload integration
 - [x] Approximate repair-cost ranges (demo, web-search prices)
 - [x] Estimated claimable amount from a standard India policy template
 - [x] Estimate assumptions, sources and date, confidence label, and disclaimer
+
+---
+
+# 🔮 Future Roadmap
+
 - [ ] Licensed parts/labour catalogs and real insurer policy data
 - [ ] Regenerate the PDF when policy inputs change
 - [ ] Human-in-the-loop claim approval
 - [ ] Multi-image claim analysis
-- [x] Mobile upload integration
-- [x] LangGraph agentic workflow
-- [x] Authenticated FastAPI API
-- [x] Next.js web application
 
 ---
 
