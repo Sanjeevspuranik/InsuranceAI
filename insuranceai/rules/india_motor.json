@@ -1,0 +1,52 @@
+{
+  "_meta": {
+    "region": "IN",
+    "currency": "INR",
+    "status": "Indicative demo values compiled from public secondary sources (e.g. PayBima, bimacalculator); not verified against the IRDAI/insurer policy wording.",
+    "last_reviewed": "2026-10-26"
+  },
+  "metal_depreciation_by_age_months": [
+    {"max_months": 6, "rate": 0.0},
+    {"max_months": 12, "rate": 0.05},
+    {"max_months": 24, "rate": 0.10},
+    {"max_months": 36, "rate": 0.15},
+    {"max_months": 48, "rate": 0.25},
+    {"max_months": 60, "rate": 0.35},
+    {"max_months": 120, "rate": 0.40},
+    {"max_months": null, "rate": 0.50}
+  ],
+  "flat_depreciation": {
+    "rubber_plastic": 0.50,
+    "fibreglass": 0.30,
+    "glass": 0.0,
+    "paint": 0.50
+  },
+  "compulsory_deductible_inr": {
+    "up_to_1500cc": 1000,
+    "above_1500cc": 2000
+  },
+  "total_loss_threshold_of_idv": 0.75,
+  "policy_templates": {
+    "third_party_only": {
+      "label": "Third-party only",
+      "description": "Covers liability to others. No own-damage cover for your vehicle.",
+      "own_damage": false,
+      "zero_depreciation": false,
+      "default_copay_pct": 0.0
+    },
+    "standard_comprehensive": {
+      "label": "Standard comprehensive",
+      "description": "Own-damage cover with the standard depreciation schedule and compulsory deductible.",
+      "own_damage": true,
+      "zero_depreciation": false,
+      "default_copay_pct": 0.0
+    },
+    "comprehensive_zero_dep": {
+      "label": "Comprehensive + zero depreciation",
+      "description": "Own-damage cover where parts depreciation is waived. Compulsory deductible still applies.",
+      "own_damage": true,
+      "zero_depreciation": true,
+      "default_copay_pct": 0.0
+    }
+  }
+}

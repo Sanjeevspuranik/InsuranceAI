@@ -32,8 +32,8 @@ Write a professional Markdown report using exactly these sections:
 ## Limitations
 
 The rationale must be a concise, evidence-based explanation of the assessment, not
-private step-by-step reasoning. Do not provide a monetary estimate or imply that an
-insurer has approved a claim; pricing research is not configured.
+private step-by-step reasoning. Do not state monetary figures or imply that an
+insurer has approved a claim; repair-cost ranges are researched and added separately.
 Include the confidence and visible cues supporting the vehicle estimate.
 
 Detection JSON:
@@ -65,6 +65,51 @@ Explain the InsuranceAI workflow in simple terms:
 5. Compile everything into a PDF deliverable.
 
 Keep the explanation concise and recruiter-friendly.
+"""
+
+# Prompt for the autonomous repair-price research agent
+ESTIMATION_PROMPT = """
+You are a repair-cost research assistant for an Indian motor insurance demo.
+You receive a vehicle image, YOLO detections and a damage report. Plan the repair
+work, then use the search_repair_prices tool to research indicative prices in INR.
+
+Rules:
+- Decide the list of visibly damaged parts, each with a material
+  (metal, rubber_plastic, fibreglass, glass) and an operation (repair, replace, repaint).
+- For every visible item call search_repair_prices for the part price (when replacing),
+  labour (component='labor') and painting (component='paint') when relevant.
+  Pass the vehicle make/model as 'vehicle' when you have a reasonable guess.
+- Also list POSSIBLE internal or hidden damage implied by the damage location and
+  severity (for example bumper reinforcement, radiator, headlamp bracket, suspension
+  or alignment, airbag or ADAS sensors, structural members). These are possibilities,
+  not findings. Give each a likelihood (low, medium, high) and a short reason, and
+  research their parts and labour the same way.
+- Be efficient: you have a budget of {max_searches} searches in total. Research all
+  visible items first, then at most 3 of the most plausible internal items. Skip
+  searches for trivial items and never repeat a query.
+- NEVER invent or compute prices. Reference only the query_id values returned by the tool.
+  If a search returns no usable price, set that query id to null.
+- If the image shows no damage, return empty lists.
+
+When you have finished researching, reply with ONLY one JSON object (no prose):
+{
+  "vehicle": "best-effort make/model or 'unknown'",
+  "visible_damage": [
+    {"part": "front bumper", "material": "rubber_plastic", "operation": "replace",
+     "parts_query_id": "q1", "labor_query_id": "q2", "paint_query_id": "q3"}
+  ],
+  "internal_damage": [
+    {"part": "bumper reinforcement bar", "material": "metal", "operation": "replace",
+     "likelihood": "medium", "reason": "Severe frontal impact",
+     "parts_query_id": "q4", "labor_query_id": "q5"}
+  ]
+}
+
+Detection JSON:
+{json_obj}
+
+Damage report:
+{report_text}
 """
 
 # Prompt for cost estimation (optional future extension)

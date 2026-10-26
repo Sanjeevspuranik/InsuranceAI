@@ -67,6 +67,16 @@ def process_claim(claim_id: str) -> None:
                     stage,
                     progress * 100,
                 )
+                try:
+                    with SessionLocal() as progress_db:
+                        progress_db.execute(
+                            update(Claim)
+                            .where(Claim.id == claim_id)
+                            .values(stage=stage[:200], progress_pct=int(progress * 100))
+                        )
+                        progress_db.commit()
+                except Exception:  # a progress write must never fail the claim
+                    logger.warning("claim.progress.update_failed", exc_info=True)
 
             result = run_claim_pipeline_with_usage(
                 str(source_path),
@@ -101,9 +111,14 @@ def process_claim(claim_id: str) -> None:
             if claim is None:
                 raise RuntimeError("Claim record disappeared during processing.")
             claim.status = "completed"
+            claim.stage = "Analysis complete."
+            claim.progress_pct = 100
             claim.report_text = result.report_text
             claim.rationale = result.rationale
             claim.reasoning_tokens = result.reasoning_tokens
+            claim.cost_estimate = result.cost_estimate
+            claim.internal_damage_estimate = result.internal_damage_estimate
+            claim.claim_breakdown = result.claim_breakdown
             claim.pdf_key = pdf_key
             claim.annotated_image_key = image_key
             claim.error_message = None

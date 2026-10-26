@@ -33,6 +33,7 @@ https://github.com/Sanjeevspuranik/InsuranceAI/blob/main/demo/video/InsuranceAI_
 - ✅ GPT-based Insurance Damage Report Generation
 - ✅ Formatted PDF reports with section styling, page numbers, and annotated evidence
 - ✅ Class-wise Segmentation Visualization
+- ✅ Indicative repair-cost and claimable-amount ranges (India, demo)
 - ✅ Modular Architecture for SaaS / API Deployment
 
 ---
@@ -380,7 +381,8 @@ visualize_segments(results)
   visual estimate of the vehicle make and model
 - Displays provider-reported reasoning-token counts when available, without
   exposing hidden chain-of-thought text
-- Does not generate monetary estimates; pricing research is not configured
+- Does not rely on the report model for prices: repair-cost research runs in a
+  separate tool-using step (see Repair Cost and Claimable Estimates below)
 - Displays a concise assessment rationale from the final response, not hidden
   chain-of-thought or raw reasoning tokens
 
@@ -390,17 +392,56 @@ provider. Set `OPENAI_MODEL` to override the default `gpt-6-luna` model identifi
 
 ---
 
+# 💰 Repair Cost and Claimable Estimates (Demo)
+
+After the damage report, a second agent step researches **indicative Indian
+repair prices (INR)** with a `search_repair_prices` tool backed by Tavily or
+Serper. Estimates are always **ranges**, never a single figure or a settlement.
+
+- **Visible damage** is priced per item (parts, labour, paint) and totalled.
+- **Possible internal or hidden damage** (for example reinforcement bars,
+  radiators, sensors) is listed separately with a likelihood, its own range, and
+  is never included in the claimable amount.
+- **Claimable range** is computed by deterministic code
+  (`insuranceai/claims_calc.py`), not by the LLM, from the cost ranges and a
+  standard India motor policy template: parts depreciation, compulsory and
+  voluntary deductible, co-pay, IDV cap and a total-loss flag. Rules live in
+  `insuranceai/rules/india_motor.json`. See `docs/policy-comparison.md`.
+- Every figure shows assumptions, source links, retrieval date and a
+  confidence label, with a visible not-a-settlement disclaimer.
+- Users can change the policy template and values in the UI; the claimable range
+  is recomputed without calling the model (`PUT /api/v1/claims/{id}/policy`).
+
+Configuration (optional; without a key, claims complete with the damage report
+and no estimate):
+
+| Variable | Purpose |
+|---|---|
+| `TAVILY_SEARCH_API` / `SERPER_SEARCH_API` | Search provider API keys |
+| `PRICE_SEARCH_PROVIDER` | `tavily` or `serper` (default: whichever key is set, Tavily first) |
+| `PRICE_SEARCH_MAX_CALLS` | Searches allowed per claim (default 16) |
+| `PRICE_SEARCH_CACHE_TTL_HOURS` | Price cache lifetime (default 24) |
+
+Limitations: prices are parsed from web search snippets, so they are indicative
+and can be wrong or sparse; a line with too little data is shown as "price not
+found". Photos cannot reveal hidden damage. Policy templates are standard
+interpretations, not your actual policy. The PDF is generated once, with the
+default template, and is not regenerated when the policy is changed in the UI.
+Run `alembic upgrade head` to apply migrations `0003` and `0004`. While a claim
+is processing, the UI shows the live pipeline step and percentage from the worker.
+
+---
+
 # 🔮 Future Roadmap
 
-- [ ] Approximate repair-cost ranges by detected damage, vehicle make/model,
-      region, and labor/parts pricing source
-- [ ] Estimated claimable amount based on covered repair costs, policy limits,
-      exclusions, deductible, and co-pay when policy data is provided
-- [ ] Show estimate assumptions, source and date, confidence range, and
-      human-review disclaimer; never present estimates as a guaranteed settlement
+- [x] Approximate repair-cost ranges (demo, web-search prices)
+- [x] Estimated claimable amount from a standard India policy template
+- [x] Estimate assumptions, sources and date, confidence label, and disclaimer
+- [ ] Licensed parts/labour catalogs and real insurer policy data
+- [ ] Regenerate the PDF when policy inputs change
 - [ ] Human-in-the-loop claim approval
 - [ ] Multi-image claim analysis
-- [ ] Mobile upload integration
+- [x] Mobile upload integration
 - [x] LangGraph agentic workflow
 - [x] Authenticated FastAPI API
 - [x] Next.js web application

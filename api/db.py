@@ -65,7 +65,7 @@ def verify_database_schema() -> None:
             "Database schema is missing. Run 'alembic upgrade head' first."
         )
     columns = {column["name"] for column in inspector.get_columns("claims")}
-    if "reasoning_tokens" not in columns:
+    if not {"reasoning_tokens", "claim_breakdown", "progress_pct"} <= columns:
         raise RuntimeError(
             "Database schema is outdated. Run 'alembic upgrade head' first."
         )

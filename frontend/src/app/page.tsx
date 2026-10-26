@@ -3,13 +3,23 @@
 import { FormEvent, useEffect, useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import ReactMarkdown from "react-markdown";
+import CostEstimatePanel, {
+  ClaimBreakdown,
+  CostEstimate,
+  InternalEstimate,
+} from "./CostEstimatePanel";
 
 type Claim = {
   claim_id: string;
   status: "queued" | "processing" | "completed" | "failed";
+  stage?: string | null;
+  progress_pct?: number | null;
   report?: string | null;
   rationale?: string | null;
   reasoning_tokens?: number | null;
+  cost_estimate?: CostEstimate | null;
+  internal_damage_estimate?: InternalEstimate | null;
+  claim_breakdown?: ClaimBreakdown | null;
   error?: string | null;
   report_pdf_url?: string | null;
   annotated_image_url?: string | null;
@@ -35,9 +45,14 @@ export default function Home() {
   const [annotatedUrl, setAnnotatedUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState("");
   const accessToken = session?.apiAccessToken;
   const isAuthenticated = Boolean(accessToken);
+  // Short step name for the button; the full detail stays in the status line.
+  const stepLabel = `${message.split(":")[0].replace(/\.\.\.$/, "") || "Analyzing"}${
+    progress === null ? "" : ` · ${progress}%`
+  }`;
 
   useEffect(
     () => () => {
@@ -71,6 +86,7 @@ export default function Home() {
     setBusy(true);
     setError("");
     setMessage("Uploading image...");
+    setProgress(0);
     setClaim(null);
     setAnnotatedUrl(null);
 
@@ -84,7 +100,8 @@ export default function Home() {
       });
       if (!upload.ok) throw new Error(await readError(upload));
       const accepted = (await upload.json()) as { claim_id: string };
-      setMessage("Claim queued. Analysis is running...");
+      setMessage("Claim queued. Waiting for an analysis worker...");
+      setProgress(2);
 
       let latest: Claim | undefined;
       for (let attempt = 0; attempt < 300; attempt += 1) {
@@ -95,15 +112,18 @@ export default function Home() {
         if (latest.status === "failed") {
           throw new Error(latest.error ?? "Claim analysis failed.");
         }
-        setMessage(
-          latest.status === "queued"
-            ? "Waiting for an available analysis worker..."
-            : "Analyzing image and preparing the report...",
-        );
+        if (latest.status === "queued") {
+          setMessage("Waiting for an available analysis worker...");
+          setProgress(2);
+        } else {
+          setMessage(latest.stage ?? "Analyzing image and preparing the report...");
+          setProgress(latest.progress_pct ?? null);
+        }
       }
       if (!latest || latest.status !== "completed") {
         throw new Error("Analysis is taking longer than expected. Check this claim again shortly.");
       }
+      setProgress(100);
       setMessage("Analysis complete.");
       if (latest.annotated_image_url) {
         await loadAnnotatedImage(latest.annotated_image_url, accessToken);
@@ -173,8 +193,8 @@ export default function Home() {
           <section className="card">
             <h2>Start a damage assessment</h2>
             <p className="muted">
-              Upload one JPEG, PNG, or WEBP image. The initial report does not
-              include a repair-cost estimate.
+              Upload one JPEG, PNG, or WEBP image. The report includes
+              indicative repair-cost ranges, which are not a settlement.
             </p>
             <form onSubmit={submitClaim} aria-busy={busy}>
               <input
@@ -188,7 +208,7 @@ export default function Home() {
                 {busy ? (
                   <span className="button-label">
                     <span className="spinner" aria-hidden="true" />
-                    Analyzing...
+                    {stepLabel}
                   </span>
                 ) : (
                   "Upload and analyze"
@@ -201,9 +221,13 @@ export default function Home() {
                   aria-label="Claim analysis progress"
                   aria-valuemin={0}
                   aria-valuemax={100}
+                  aria-valuenow={progress ?? undefined}
                   aria-valuetext={message || "Claim analysis in progress"}
                 >
-                  <span className="progress-indicator" />
+                  <span
+                    className={`progress-indicator${progress === null ? "" : " determinate"}`}
+                    style={progress === null ? undefined : { width: `${Math.max(progress, 3)}%` }}
+                  />
                 </div>
               ) : null}
             </form>
@@ -241,6 +265,21 @@ export default function Home() {
                   {/* The image URL is an authorized, short-lived browser object URL. */}
                   <img className="annotated" src={annotatedUrl} alt="AI-annotated vehicle damage" />
                 </div>
+              ) : null}
+              {claim.status === "completed" && accessToken ? (
+                <CostEstimatePanel
+                  claimId={claim.claim_id}
+                  apiBaseUrl={apiBaseUrl}
+                  token={accessToken}
+                  costEstimate={claim.cost_estimate}
+                  internalEstimate={claim.internal_damage_estimate}
+                  breakdown={claim.claim_breakdown}
+                  onBreakdownChange={(breakdown) =>
+                    setClaim((current) =>
+                      current ? { ...current, claim_breakdown: breakdown } : current,
+                    )
+                  }
+                />
               ) : null}
               {claim.report ? (
                 <article className="report">

@@ -95,6 +95,9 @@ class ClaimsApiTests(unittest.TestCase):
                 rationale="Visible test evidence.",
                 pdf_path=str(pdf_path),
                 reasoning_tokens=19,
+                cost_estimate={"status": "estimated", "total": {"low": 1000, "high": 2000}},
+                internal_damage_estimate={"status": "estimated", "included_in_claimable": False},
+                claim_breakdown={"claimable": {"low": 0, "high": 500}},
             )
 
         fake_workflow = SimpleNamespace(run_claim_pipeline_with_usage=fake_pipeline)
@@ -105,13 +108,56 @@ class ClaimsApiTests(unittest.TestCase):
             f"/api/v1/claims/{claim_id}", headers=self.auth_headers
         )
         self.assertEqual(completed.json()["status"], "completed")
+        self.assertEqual(completed.json()["progress_pct"], 100)
+        self.assertEqual(completed.json()["stage"], "Analysis complete.")
         self.assertEqual(completed.json()["rationale"], "Visible test evidence.")
         self.assertEqual(completed.json()["reasoning_tokens"], 19)
+        self.assertEqual(completed.json()["cost_estimate"]["total"]["high"], 2000)
+        self.assertFalse(completed.json()["internal_damage_estimate"]["included_in_claimable"])
+        self.assertEqual(completed.json()["claim_breakdown"]["claimable"]["high"], 500)
         pdf = self.client.get(
             f"/api/v1/claims/{claim_id}/report.pdf", headers=self.auth_headers
         )
         self.assertEqual(pdf.status_code, 200)
         self.assertEqual(pdf.content, b"test-pdf")
+
+    def test_policy_update_recomputes_claimable_range(self):
+        estimate = {
+            "status": "estimated",
+            "items": [
+                {"part": "front bumper", "material": "rubber_plastic", "operation": "replace",
+                 "parts": {"low": 10000, "high": 14000}, "labor": {"low": 1000, "high": 1500},
+                 "paint": {"low": 2000, "high": 3000}, "estimable": True},
+            ],
+        }
+        with SessionLocal() as db:
+            db.add(Claim(id="policyclaim", tenant_id="test-tenant", owner_subject="local-dev-user",
+                         source_image_key="x", status="completed", cost_estimate=estimate))
+            db.add(Claim(id="noestimate", tenant_id="test-tenant", owner_subject="local-dev-user",
+                         source_image_key="x", status="completed"))
+            db.commit()
+        templates = self.client.get("/api/v1/policy-templates", headers=self.auth_headers)
+        self.assertEqual(templates.status_code, 200)
+        self.assertIn("comprehensive_zero_dep", {t["id"] for t in templates.json()})
+
+        standard = self.client.put("/api/v1/claims/policyclaim/policy", headers=self.auth_headers,
+                                   json={"template": "standard_comprehensive", "idv_inr": 500000})
+        self.assertEqual(standard.status_code, 200, standard.text)
+        zero_dep = self.client.put("/api/v1/claims/policyclaim/policy", headers=self.auth_headers,
+                                   json={"template": "comprehensive_zero_dep", "idv_inr": 500000})
+        self.assertGreater(zero_dep.json()["claim_breakdown"]["claimable"]["high"],
+                           standard.json()["claim_breakdown"]["claimable"]["high"])
+        self.assertEqual(zero_dep.json()["policy_input"]["template"], "comprehensive_zero_dep")
+
+        bad = self.client.put("/api/v1/claims/policyclaim/policy", headers=self.auth_headers,
+                              json={"copay_pct": 150})
+        self.assertEqual(bad.status_code, 422)
+        unknown = self.client.put("/api/v1/claims/policyclaim/policy", headers=self.auth_headers,
+                                  json={"template": "nope"})
+        self.assertEqual(unknown.status_code, 422)
+        self.assertEqual(self.client.put("/api/v1/claims/noestimate/policy", headers=self.auth_headers,
+                                         json={}).status_code, 409)
+        self.assertEqual(self.client.put("/api/v1/claims/policyclaim/policy", json={}).status_code, 401)
 
     def test_invalid_image_and_cross_tenant_access(self):
         invalid = self.client.post(

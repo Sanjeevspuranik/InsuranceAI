@@ -24,8 +24,16 @@ from api.logging_config import (
     request_id_context,
 )
 from api.models import Claim, utc_now
-from api.schemas import ClaimAccepted, ClaimListResponse, ClaimResponse
+from api.schemas import (
+    ClaimAccepted,
+    ClaimListResponse,
+    ClaimResponse,
+    PolicyInputRequest,
+    PolicyTemplate,
+)
 from api.storage import storage
+from insuranceai.claims_calc import PolicyInput, list_policy_templates
+from insuranceai.estimation import compute_breakdown
 
 configure_logging()
 logger = logging.getLogger(__name__)
@@ -56,7 +64,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.get_cors_origins(),
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "PUT"],
     allow_headers=["Authorization", "Content-Type"],
     expose_headers=["X-Request-ID"],
 )
@@ -163,12 +171,18 @@ def _claim_response(claim: Claim) -> ClaimResponse:
     return ClaimResponse(
         claim_id=claim.id,
         status=claim.status,
+        stage=claim.stage,
+        progress_pct=claim.progress_pct,
         created_at=claim.created_at,
         updated_at=claim.updated_at,
         detections=claim.detections,
         report=claim.report_text,
         rationale=claim.rationale,
         reasoning_tokens=claim.reasoning_tokens,
+        cost_estimate=claim.cost_estimate,
+        internal_damage_estimate=claim.internal_damage_estimate,
+        policy_input=claim.policy_input,
+        claim_breakdown=claim.claim_breakdown,
         report_pdf_url=(
             f"/api/v1/claims/{claim.id}/report.pdf" if claim.pdf_key else None
         ),
@@ -298,6 +312,45 @@ def list_claims(
         query.order_by(desc(Claim.created_at)).limit(50)
     ).all()
     return ClaimListResponse(claims=[_claim_response(claim) for claim in claims])
+
+
+@app.get("/api/v1/policy-templates", response_model=list[PolicyTemplate])
+def get_policy_templates(_principal: Principal = Depends(get_current_principal)):
+    return [
+        PolicyTemplate(id=template_id, **{k: v for k, v in template.items() if k != "default_copay_pct"})
+        for template_id, template in list_policy_templates().items()
+    ]
+
+
+@app.put("/api/v1/claims/{claim_id}/policy", response_model=ClaimResponse)
+def update_claim_policy(
+    claim_id: str,
+    body: PolicyInputRequest,
+    principal: Principal = Depends(get_current_principal),
+    db: Session = Depends(get_db),
+):
+    """Recompute the claimable range from the stored estimate; the model is not called again."""
+    claim = _accessible_claim(claim_id, principal, db)
+    if claim.status != "completed" or not claim.cost_estimate:
+        raise HTTPException(status_code=409, detail="A cost estimate is not available for this claim.")
+    try:
+        breakdown = compute_breakdown(claim.cost_estimate, PolicyInput(**body.model_dump()))
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    if breakdown is None:
+        raise HTTPException(status_code=409, detail="No priced items are available to apply a policy to.")
+    data = breakdown.to_dict()
+    claim.policy_input = body.model_dump()
+    claim.claim_breakdown = data
+    claim.updated_at = utc_now()
+    db.commit()
+    logger.info(
+        "claim.policy.updated template=%s idv_provided=%s",
+        body.template,
+        body.idv_inr is not None,
+        extra={"claim_id": claim_id},
+    )
+    return _claim_response(claim)
 
 
 @app.get("/api/v1/claims/{claim_id}", response_model=ClaimResponse)

@@ -3,7 +3,11 @@ tools.py
 Wraps InsuranceAI functions into LangChain tools using @tool decorator.
 """
 
+import json
+from typing import Literal
+
 from langchain_core.tools import tool
+from insuranceai.price_search import get_price_session
 from insuranceai.utils import yolo_model
 from insuranceai.utils import (
     predict_image,
@@ -47,6 +51,32 @@ def create_damage_pdf_tool(report_text: str, images_dir: str = "segmented_classe
 def visualize_segments_tool(img_path: str, output_path: str = "segmented_damage.jpg"):
     """Overlay segmentation masks and labels on the original image."""
     return visualize_segments(img_path=img_path, output_path=output_path)
+
+
+# Tool: Repair price search (used by the estimation agent only)
+
+
+@tool("search_repair_prices")
+def search_repair_prices_tool(
+    part: str,
+    component: Literal["parts", "labor", "paint"],
+    operation: Literal["repair", "replace", "repaint"] = "replace",
+    vehicle: str = "",
+) -> str:
+    """Search the web for an indicative Indian price range (INR) for one vehicle part.
+
+    Use component='parts' for the part price, 'labor' for labour charges and
+    'paint' for painting cost. Returns a JSON range with a query_id; cite that
+    query_id in your final answer. Never invent prices.
+    """
+    session = get_price_session()
+    if session is None:
+        return json.dumps({"status": "not_configured", "note": "Price search is not available."})
+    return json.dumps(session.search(part, component, operation, vehicle).to_dict())
+
+
+def get_pricing_tools():
+    return [search_repair_prices_tool]
 
 
 # Collect all tools in a list

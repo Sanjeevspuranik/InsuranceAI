@@ -75,9 +75,10 @@ class InsuranceAgent:
         response = self.model.invoke(messages)
         return {"messages": [response]}
 
-    def invoke(self, messages: List[AnyMessage]) -> AIMessage:
+    def invoke(self, messages: List[AnyMessage], recursion_limit: Optional[int] = None) -> AIMessage:
         """Run the graph and return its final assistant response."""
-        state = self.workflow.invoke({"messages": messages})
+        config = {"recursion_limit": recursion_limit} if recursion_limit else None
+        state = self.workflow.invoke({"messages": messages}, config)
         response = state["messages"][-1]
         if not isinstance(response, AIMessage):
             raise TypeError("The agent workflow did not return an assistant response.")

@@ -137,6 +137,11 @@ button {
   animation: progress-slide 1.4s ease-in-out infinite;
 }
 
+.progress-indicator.determinate {
+  animation: none;
+  transition: width 0.5s ease;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -178,6 +183,124 @@ button {
 
 .report pre {
   overflow-x: auto;
+}
+
+.estimate {
+  margin: 20px 0;
+  padding-top: 4px;
+}
+
+.disclaimer {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-left: 4px solid #c27c0e;
+  border-radius: 4px;
+  background: #fff8ec;
+  color: #5c3d06;
+  font-size: 0.92rem;
+}
+
+.estimate-list {
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.estimate-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.estimate-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+  font-size: 0.85rem;
+}
+
+.badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e8eef4;
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.confidence-medium,
+.likelihood-low {
+  background: #dff3e4;
+}
+
+.confidence-low,
+.likelihood-medium {
+  background: #fdf0d0;
+}
+
+.confidence-none,
+.likelihood-high {
+  background: #fbe0e0;
+}
+
+.range-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 12px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f6f8fa;
+}
+
+.range-card strong {
+  font-size: 1.4rem;
+}
+
+.range-card.highlight {
+  border-color: var(--accent);
+  background: #eef6fc;
+}
+
+.policy-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.policy-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.policy-form input,
+.policy-form select {
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font: inherit;
+}
+
+.internal-panel {
+  margin-top: 20px;
+  padding: 14px 16px;
+  border: 1px dashed #c27c0e;
+  border-radius: 8px;
+}
+
+.assumptions {
+  margin-top: 16px;
+}
+
+.assumptions summary {
+  cursor: pointer;
+  font-weight: 600;
 }
 
 @media (max-width: 640px) {
